@@ -31,10 +31,10 @@ jobs:
           export DATESTRING=`date "+%Y-%m-%d"`
           export COMMIT=$(git rev-parse --short=10 "$GITHUB_SHA")
           ./configure --shared && make -j3 SKIP_XZ=1
-      - run: cp -f ./build/Release/libnode.a ./binaries/
-      - run: cp -f ./build/Release/libnode.so ./binaries/
+      - run: cp -f ./Release/libnode.a ./binaries/
+      - run: cp -f ./Release/libnode.so ./binaries/
         if: startsWith(matrix.os, 'ubuntu')
-      - run: cp -f ./build/Release/libnode.dylib ./binaries/
+      - run: cp -f ./Release/libnode.dylib ./binaries/
         if: startsWith(matrix.os, 'macos')
       - name: Configure Git
         run: |
