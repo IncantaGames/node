@@ -31,11 +31,62 @@ jobs:
           export DATESTRING=`date "+%Y-%m-%d"`
           export COMMIT=$(git rev-parse --short=10 "$GITHUB_SHA")
           ./configure --shared && make -j3 SKIP_XZ=1
-      - run: cp -f ./Release/libnode.a ./binaries/
-      - run: cp -f ./Release/libnode.so ./binaries/
+      - run: cp -f ./Release/libnode.a ./binaries/libnode-x64.a
         if: startsWith(matrix.os, 'ubuntu')
-      - run: cp -f ./Release/libnode.dylib ./binaries/
+      - run: cp -f ./Release/libnode.a ./binaries/libnode-darwin.a
         if: startsWith(matrix.os, 'macos')
+      - run: cp -f ./Release/libnode.so ./binaries/libnode-x64.so
+        if: startsWith(matrix.os, 'ubuntu')
+      - run: cp -f ./Release/libnode.dylib ./binaries/libnode-darwin.dylib
+        if: startsWith(matrix.os, 'macos')
+      - name: Configure Git
+        run: |
+          git config --global user.email "seesemichaelj@users.noreply.github.com"
+          git config --global user.name "Mike Seese"
+          git config pull.rebase true
+      - run: git add binaries
+      - run: git checkout -b temp_${{ github.sha }} # create it if it doesn't exist
+        continue-on-error: true
+      - run: git push origin temp_${{ github.sha }}
+        continue-on-error: true
+      - run: git checkout temp_${{ github.sha }} # checkout if it already existed
+      - run: git fetch
+      - run: git branch -u origin/temp_${{ github.sha }} temp_${{ github.sha }}
+      - name: Commit
+        run: git commit -m "[GitHub Actions] Updated ${{ matrix.os }} NodeJS ${{ matrix.node }} binaries" || true
+      - name: Push
+        uses: nick-invision/retry@v2
+        with:
+          timeout_minutes: 1
+          max_attempts: 20
+          retry_wait_seconds: 5
+          on_retry_command: git pull
+          command: git push origin temp_${{ github.sha }}
+
+  build-arm:
+    if: ${{ !startsWith(github.event.head_commit.message, '[Github Actions]') && !startsWith(github.event.head_commit.message, '[Skip CI]') }} # Prevent recursive builds
+    env:
+      PYTHON_VERSION: 3.9
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Environment Information
+        run: npx envinfo
+      - name: Build
+        run: |
+          export DISTTYPE=release
+          export DATESTRING=`date "+%Y-%m-%d"`
+          export COMMIT=$(git rev-parse --short=10 "$GITHUB_SHA")
+          ./configure --dest-cpu arm64 --shared && make -j2 SKIP_XZ=1
+      - run: cp -f ./Release/libnode.a ./binaries/libnode-arm64.a
+      - run: cp -f ./Release/libnode.so ./binaries/libnode-arm64.so
       - name: Configure Git
         run: |
           git config --global user.email "seesemichaelj@users.noreply.github.com"
@@ -105,7 +156,7 @@ jobs:
 
   commit-to-master:
     if: ${{ !startsWith(github.event.head_commit.message, '[Github Actions]') && !startsWith(github.event.head_commit.message, '[Skip CI]') }} # Prevent recursive builds
-    needs: [build-unix, build-windows]
+    needs: [build-unix, build-arm, build-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
