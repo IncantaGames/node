@@ -15,7 +15,7 @@ jobs:
       PYTHON_VERSION: 3.9
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -59,106 +59,106 @@ jobs:
           on_retry_command: git pull
           command: git push origin temp_${{ github.sha }}
 
-  build-android:
-    if: ${{ !startsWith(github.event.head_commit.message, '[Github Actions]') && !startsWith(github.event.head_commit.message, '[Skip CI]') }} # Prevent recursive builds
-    env:
-      PYTHON_VERSION: 3.9
-    strategy:
-      matrix:
-        arch: [arm, arm64]
-        androidSdk: [23]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - name: Environment Information
-        run: npx envinfo
-      - name: Download NDK
-        run: |
-          wget https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip
-          unzip android-ndk-r21e-linux-x86_64.zip
-      - name: Build
-        run: |
-          export DISTTYPE=release
-          export DATESTRING=`date "+%Y-%m-%d"`
-          export COMMIT=$(git rev-parse --short=10 "$GITHUB_SHA")
-          ./android-configure android-ndk-r21e ${{ matrix.arch }} ${{ matrix.androidSdk }}
-          make -j2
-      - run: cp -f ./out/Release/libnode.a ./binaries/libnode-arm64.a
-      - run: cp -f ./out/Release/libnode.so ./binaries/libnode-arm64.so
-      - name: Configure Git
-        run: |
-          git config --global user.email "seesemichaelj@users.noreply.github.com"
-          git config --global user.name "Mike Seese"
-          git config pull.rebase true
-      - run: git add binaries
-      - run: git checkout -b temp_${{ github.sha }} # create it if it doesn't exist
-        continue-on-error: true
-      - run: git push origin temp_${{ github.sha }}
-        continue-on-error: true
-      - run: git checkout temp_${{ github.sha }} # checkout if it already existed
-      - run: git fetch
-      - run: git branch -u origin/temp_${{ github.sha }} temp_${{ github.sha }}
-      - name: Commit
-        run: git commit -m "[GitHub Actions] Updated ${{ matrix.os }} NodeJS ${{ matrix.node }} binaries" || true
-      - name: Push
-        uses: nick-invision/retry@v2
-        with:
-          timeout_minutes: 1
-          max_attempts: 20
-          retry_wait_seconds: 5
-          on_retry_command: git pull
-          command: git push origin temp_${{ github.sha }}
+  # build-android:
+  #   if: ${{ !startsWith(github.event.head_commit.message, '[Github Actions]') && !startsWith(github.event.head_commit.message, '[Skip CI]') }} # Prevent recursive builds
+  #   env:
+  #     PYTHON_VERSION: 3.9
+  #   strategy:
+  #     matrix:
+  #       arch: [arm, arm64]
+  #       androidSdk: [26]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Set up Python ${{ env.PYTHON_VERSION }}
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: ${{ env.PYTHON_VERSION }}
+  #     - name: Environment Information
+  #       run: npx envinfo
+  #     - name: Download NDK
+  #       run: |
+  #         wget https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip
+  #         unzip android-ndk-r21e-linux-x86_64.zip
+  #     - name: Build
+  #       run: |
+  #         export DISTTYPE=release
+  #         export DATESTRING=`date "+%Y-%m-%d"`
+  #         export COMMIT=$(git rev-parse --short=10 "$GITHUB_SHA")
+  #         ./android-configure $(pwd)/android-ndk-r21e ${{ matrix.arch }} ${{ matrix.androidSdk }} shared
+  #         make -j2
+  #     - run: cp -f ./out/Release/libnode.a ./binaries/libnode-arm64.a
+  #     - run: cp -f ./out/Release/libnode.so ./binaries/libnode-arm64.so
+  #     - name: Configure Git
+  #       run: |
+  #         git config --global user.email "seesemichaelj@users.noreply.github.com"
+  #         git config --global user.name "Mike Seese"
+  #         git config pull.rebase true
+  #     - run: git add binaries
+  #     - run: git checkout -b temp_${{ github.sha }} # create it if it doesn't exist
+  #       continue-on-error: true
+  #     - run: git push origin temp_${{ github.sha }}
+  #       continue-on-error: true
+  #     - run: git checkout temp_${{ github.sha }} # checkout if it already existed
+  #     - run: git fetch
+  #     - run: git branch -u origin/temp_${{ github.sha }} temp_${{ github.sha }}
+  #     - name: Commit
+  #       run: git commit -m "[GitHub Actions] Updated ${{ matrix.os }} NodeJS ${{ matrix.node }} binaries" || true
+  #     - name: Push
+  #       uses: nick-invision/retry@v2
+  #       with:
+  #         timeout_minutes: 1
+  #         max_attempts: 20
+  #         retry_wait_seconds: 5
+  #         on_retry_command: git pull
+  #         command: git push origin temp_${{ github.sha }}
 
-  build-windows:
-    if: ${{ !startsWith(github.event.head_commit.message, '[Github Actions]') && !startsWith(github.event.head_commit.message, '[Skip CI]') }} # Prevent recursive builds
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python ${{ env.PYTHON_VERSION }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - name: Install deps
-        run: choco install nasm
-      - name: Environment Information
-        run: npx envinfo
-      - name: Build
-        run: ./vcbuild.bat dll release
-      - name: Copy Binaries
-        run: |
-          cp -Force ./out/Release/libnode.lib ./binaries/
-          cp -Force ./out/Release/libnode.dll ./binaries/
-      - name: Configure Git
-        run: |
-          git config --global user.email "seesemichaelj@users.noreply.github.com"
-          git config --global user.name "Mike Seese"
-          git config pull.rebase true
-      - run: git add binaries
-      - run: git checkout -b temp_${{ github.sha }} # create it if it doesn't exist
-        continue-on-error: true
-      - run: git push origin temp_${{ github.sha }}
-        continue-on-error: true
-      - run: git checkout temp_${{ github.sha }} # checkout if it already existed
-      - run: git fetch
-      - run: git branch -u origin/temp_${{ github.sha }} temp_${{ github.sha }}
-      - name: Commit
-        run: git commit -m "[GitHub Actions] Updated ${{ matrix.os }} NodeJS ${{ matrix.node }} binaries" || true
-      - name: Push
-        uses: nick-invision/retry@v2
-        with:
-          timeout_minutes: 1
-          max_attempts: 20
-          retry_wait_seconds: 5
-          on_retry_command: git pull
-          command: git push origin temp_${{ github.sha }}
+  # build-windows:
+  #   if: ${{ !startsWith(github.event.head_commit.message, '[Github Actions]') && !startsWith(github.event.head_commit.message, '[Skip CI]') }} # Prevent recursive builds
+  #   runs-on: windows-latest
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Set up Python ${{ env.PYTHON_VERSION }}
+  #       uses: actions/setup-python@v2
+  #       with:
+  #         python-version: ${{ env.PYTHON_VERSION }}
+  #     - name: Install deps
+  #       run: choco install nasm
+  #     - name: Environment Information
+  #       run: npx envinfo
+  #     - name: Build
+  #       run: ./vcbuild.bat dll release
+  #     - name: Copy Binaries
+  #       run: |
+  #         cp -Force ./out/Release/libnode.lib ./binaries/
+  #         cp -Force ./out/Release/libnode.dll ./binaries/
+  #     - name: Configure Git
+  #       run: |
+  #         git config --global user.email "seesemichaelj@users.noreply.github.com"
+  #         git config --global user.name "Mike Seese"
+  #         git config pull.rebase true
+  #     - run: git add binaries
+  #     - run: git checkout -b temp_${{ github.sha }} # create it if it doesn't exist
+  #       continue-on-error: true
+  #     - run: git push origin temp_${{ github.sha }}
+  #       continue-on-error: true
+  #     - run: git checkout temp_${{ github.sha }} # checkout if it already existed
+  #     - run: git fetch
+  #     - run: git branch -u origin/temp_${{ github.sha }} temp_${{ github.sha }}
+  #     - name: Commit
+  #       run: git commit -m "[GitHub Actions] Updated ${{ matrix.os }} NodeJS ${{ matrix.node }} binaries" || true
+  #     - name: Push
+  #       uses: nick-invision/retry@v2
+  #       with:
+  #         timeout_minutes: 1
+  #         max_attempts: 20
+  #         retry_wait_seconds: 5
+  #         on_retry_command: git pull
+  #         command: git push origin temp_${{ github.sha }}
 
   commit-to-master:
     if: ${{ !startsWith(github.event.head_commit.message, '[Github Actions]') && !startsWith(github.event.head_commit.message, '[Skip CI]') }} # Prevent recursive builds
-    needs: [build-unix, build-android, build-windows]
+    needs: [build-unix]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

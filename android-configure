@@ -8,14 +8,15 @@
 # modules with npm. Also, don't forget to set the arch in npm config using
 # 'npm config set arch=<arch>'
 
-if [ $# -ne 3 ]; then
-  echo "$0 should have 3 parameters: ndk_path, target_arch and sdk_version"
+if [ $# -ne 4 ]; then
+  echo "$0 should have 4 parameters: ndk_path, target_arch, sdk_version, and library_type"
   exit 1
 fi
 
 NDK_PATH=$1
 ARCH="$2"
 ANDROID_SDK_VERSION=$3
+LIBRARY_TYPE=$4
 
 if [ $ANDROID_SDK_VERSION -lt 23 ]; then
   echo "$ANDROID_SDK_VERSION should equal or later than 23(Android 6.0)"
@@ -26,7 +27,7 @@ CC_VER="4.9"
 case $ARCH in
     arm)
         DEST_CPU="arm"
-        TOOLCHAIN_NAME="armv-linux-androideabi"
+        TOOLCHAIN_NAME="armv7a-linux-androideabi"
         ;;
     x86)
         DEST_CPU="ia32"
@@ -76,10 +77,20 @@ GYP_DEFINES+=" host_os=$HOST_OS OS=android"
 export GYP_DEFINES
 
 if [ -f "configure" ]; then
+  if [ "${LIBRARY_TYPE}" == "shared" ]; then
     ./configure \
         --dest-cpu=$DEST_CPU \
         --dest-os=android \
-        --without-snapshot \
         --openssl-no-asm \
-        --cross-compiling
+        --cross-compiling \
+        --with-intl none \
+        --shared
+  else
+    ./configure \
+        --dest-cpu=$DEST_CPU \
+        --dest-os=android \
+        --openssl-no-asm \
+        --cross-compiling \
+        --with-intl none
+  fi
 fi
