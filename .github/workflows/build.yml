@@ -31,13 +31,9 @@ jobs:
           export DATESTRING=`date "+%Y-%m-%d"`
           export COMMIT=$(git rev-parse --short=10 "$GITHUB_SHA")
           ./configure --shared && make -j3 SKIP_XZ=1
-      - run: cp -f ./Release/libnode.a ./binaries/libnode-x64.a
+      - run: cp -f ./Release/libnode.83.so ./binaries/libnode-x64.so
         if: startsWith(matrix.os, 'ubuntu')
-      - run: cp -f ./Release/libnode.a ./binaries/libnode-darwin.a
-        if: startsWith(matrix.os, 'macos')
-      - run: cp -f ./Release/libnode.so ./binaries/libnode-x64.so
-        if: startsWith(matrix.os, 'ubuntu')
-      - run: cp -f ./Release/libnode.dylib ./binaries/libnode-darwin.dylib
+      - run: cp -f ./Release/libnode.83.dylib ./binaries/libnode-darwin.dylib
         if: startsWith(matrix.os, 'macos')
       - name: Configure Git
         run: |
@@ -63,14 +59,14 @@ jobs:
           on_retry_command: git pull
           command: git push origin temp_${{ github.sha }}
 
-  build-arm:
+  build-android:
     if: ${{ !startsWith(github.event.head_commit.message, '[Github Actions]') && !startsWith(github.event.head_commit.message, '[Skip CI]') }} # Prevent recursive builds
     env:
       PYTHON_VERSION: 3.9
     strategy:
       matrix:
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+        destCpu: [arm, arm64]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ env.PYTHON_VERSION }}
@@ -84,7 +80,7 @@ jobs:
           export DISTTYPE=release
           export DATESTRING=`date "+%Y-%m-%d"`
           export COMMIT=$(git rev-parse --short=10 "$GITHUB_SHA")
-          ./configure --dest-cpu arm64 --shared && make -j2 SKIP_XZ=1
+          ./configure --dest-cpu ${{ matrix.destCpu }} --dest-os android --shared && make -j2 SKIP_XZ=1
       - run: cp -f ./Release/libnode.a ./binaries/libnode-arm64.a
       - run: cp -f ./Release/libnode.so ./binaries/libnode-arm64.so
       - name: Configure Git
