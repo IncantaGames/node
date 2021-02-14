@@ -1028,9 +1028,9 @@ def configure_arm(o):
     arm_fpu = 'vfpv3'
     o['variables']['arm_version'] = '7'
 
-  if options.dest_cpu == 'arm64':
-    arm_fpu = 'neon'
-    o['variables']['arm_version'] = '8'
+  # if options.dest_cpu == 'arm64':
+  #   arm_fpu = 'neon'
+  #   o['variables']['arm_version'] = '8'
 
   o['variables']['arm_fpu'] = options.arm_fpu or arm_fpu
 
@@ -1099,7 +1099,8 @@ def configure_node(o):
     o['variables']['node_use_node_code_cache'] = b(
       not cross_compiling and not options.shared)
 
-  if target_arch == 'arm' or target_arch == 'arm64':
+  # or target_arch == 'arm64':
+  if target_arch == 'arm':
     configure_arm(o)
   elif target_arch in ('mips', 'mipsel', 'mips64el'):
     configure_mips(o, target_arch)

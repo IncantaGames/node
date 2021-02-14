@@ -65,7 +65,8 @@ jobs:
       PYTHON_VERSION: 3.9
     strategy:
       matrix:
-        destCpu: [arm, arm64]
+        arch: [arm, arm64]
+        androidSdk: [23]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -75,12 +76,16 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Environment Information
         run: npx envinfo
+      - name: Download NDK
+        run: |
+          wget https://dl.google.com/android/repository/android-ndk-r21e-linux-x86_64.zip
+          unzip android-ndk-r21e-linux-x86_64.zip
       - name: Build
         run: |
           export DISTTYPE=release
           export DATESTRING=`date "+%Y-%m-%d"`
           export COMMIT=$(git rev-parse --short=10 "$GITHUB_SHA")
-          ./configure --dest-cpu ${{ matrix.destCpu }} --dest-os android --shared && make -j2 SKIP_XZ=1
+          ./android-configure android-ndk-r21e ${{ matrix.arch }} ${{ matrix.androidSdk }}
       - run: cp -f ./Release/libnode.a ./binaries/libnode-arm64.a
       - run: cp -f ./Release/libnode.so ./binaries/libnode-arm64.so
       - name: Configure Git
