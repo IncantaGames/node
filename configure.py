@@ -1028,7 +1028,7 @@ def configure_arm(o):
     arm_fpu = 'vfpv3'
     o['variables']['arm_version'] = '7'
 
-  if options.target_arch == 'arm64':
+  if options.dest_cpu == 'arm64':
     arm_fpu = 'neon'
     o['variables']['arm_version'] = '8'
 
