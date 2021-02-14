@@ -818,6 +818,7 @@
             'Dbghelp',
             'Psapi',
             'Ws2_32',
+            'Winmm',
           ],
         }],
         [ 'node_use_etw=="true"', {
