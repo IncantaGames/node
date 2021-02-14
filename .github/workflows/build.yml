@@ -31,9 +31,9 @@ jobs:
           export DATESTRING=`date "+%Y-%m-%d"`
           export COMMIT=$(git rev-parse --short=10 "$GITHUB_SHA")
           ./configure --shared && make -j3 SKIP_XZ=1
-      - run: cp -f ./Release/libnode.83.so ./binaries/libnode-x64.so
+      - run: cp -f ./out/Release/libnode.83.so ./binaries/libnode-x64.so
         if: startsWith(matrix.os, 'ubuntu')
-      - run: cp -f ./Release/libnode.83.dylib ./binaries/libnode-darwin.dylib
+      - run: cp -f ./out/Release/libnode.83.dylib ./binaries/libnode-darwin.dylib
         if: startsWith(matrix.os, 'macos')
       - name: Configure Git
         run: |
@@ -86,8 +86,9 @@ jobs:
           export DATESTRING=`date "+%Y-%m-%d"`
           export COMMIT=$(git rev-parse --short=10 "$GITHUB_SHA")
           ./android-configure android-ndk-r21e ${{ matrix.arch }} ${{ matrix.androidSdk }}
-      - run: cp -f ./Release/libnode.a ./binaries/libnode-arm64.a
-      - run: cp -f ./Release/libnode.so ./binaries/libnode-arm64.so
+          make -j2
+      - run: cp -f ./out/Release/libnode.a ./binaries/libnode-arm64.a
+      - run: cp -f ./out/Release/libnode.so ./binaries/libnode-arm64.so
       - name: Configure Git
         run: |
           git config --global user.email "seesemichaelj@users.noreply.github.com"
@@ -129,8 +130,8 @@ jobs:
         run: ./vcbuild.bat dll release
       - name: Copy Binaries
         run: |
-          cp -Force ./Release/libnode.lib ./binaries/
-          cp -Force ./Release/libnode.dll ./binaries/
+          cp -Force ./out/Release/libnode.lib ./binaries/
+          cp -Force ./out/Release/libnode.dll ./binaries/
       - name: Configure Git
         run: |
           git config --global user.email "seesemichaelj@users.noreply.github.com"
