@@ -152,7 +152,7 @@ jobs:
 
   commit-to-master:
     if: ${{ !startsWith(github.event.head_commit.message, '[Github Actions]') && !startsWith(github.event.head_commit.message, '[Skip CI]') }} # Prevent recursive builds
-    needs: [build-unix, build-arm, build-windows]
+    needs: [build-unix, build-android, build-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
