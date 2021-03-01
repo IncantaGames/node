@@ -3,7 +3,7 @@ name: Build from tarball
 on:
   push:
     branches:
-      - v14.x
+      - master # temporarily disable github ci builds until I can figure out LFS issues with binaries (should be v14.x)
 
 env:
   FLAKY_TESTS: dontcare
