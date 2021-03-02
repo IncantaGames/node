@@ -5604,6 +5604,10 @@ static void* ExternalValue(i::Object obj) {
 
 // --- E n v i r o n m e n t ---
 
+Platform* v8::V8::GetCurrentPlatform() {
+  return i::V8::GetCurrentPlatform();
+}
+
 void v8::V8::InitializePlatform(Platform* platform) {
   i::V8::InitializePlatform(platform);
 }

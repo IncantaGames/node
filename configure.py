@@ -206,6 +206,11 @@ parser.add_option('--experimental-http-parser',
     dest='experimental_http_parser',
     help='(no-op)')
 
+parser.add_option('--incanta',
+    action='store_true',
+    dest='incanta',
+    help='set incanta related stuff')
+
 shared_optgroup.add_option('--shared-http-parser',
     action='store_true',
     dest='shared_http_parser',
@@ -1171,6 +1176,9 @@ def configure_node(o):
 
   if options.no_ifaddrs:
     o['defines'] += ['SUNOS_NO_IFADDRS']
+
+  if options.incanta:
+    o['defines'] += ['INCANTA_NODE_UE4']
 
   # By default, enable ETW on Windows.
   if flavor == 'win':

@@ -70,6 +70,10 @@ set openssl_no_asm=
 set doc=
 set extra_msbuild_args=
 set exit_code=0
+set shared_zlib=
+set shared_openssl=
+set incanta=
+set disable_inspector=
 
 :next-arg
 if "%1"=="" goto args-done
@@ -145,6 +149,11 @@ if /i "%1"=="cctest"        set cctest=1&goto arg-ok
 if /i "%1"=="openssl-no-asm"   set openssl_no_asm=1&goto arg-ok
 if /i "%1"=="doc"           set doc=1&goto arg-ok
 if /i "%1"=="binlog"        set extra_msbuild_args=/binaryLogger:%config%\node.binlog&goto arg-ok
+if /i "%1"=="shared-zlib"   set shared_zlib=1&goto arg-ok
+if /i "%1"=="shared-openssl"   set shared_openssl=1&goto arg-ok
+if /i "%1"=="incanta"       set incanta=1&set disable_inspector=1&goto arg-ok
+if /i "%1"=="incanta-prod"  set incanta=1&set disable_inspector=1&set shared_zlib=1&set shared_openssl=1&goto arg-ok
+if /i "%1"=="no-inspector"  set disable_inspector=1&goto arg-ok
 
 echo Error: invalid command line option `%1`.
 exit /b 1
@@ -182,21 +191,25 @@ if "%target_env%"=="vs2019" set "node_gyp_exe=%node_gyp_exe% --msvs_version=2019
 :: skip building if the only argument received was lint
 if "%*"=="lint" if exist "%node_exe%" goto lint-cpp
 
-if "%config%"=="Debug"      set configure_flags=%configure_flags% --debug
-if defined nosnapshot       set configure_flags=%configure_flags% --without-snapshot
-if defined noetw            set configure_flags=%configure_flags% --without-etw& set noetw_msi_arg=/p:NoETW=1
-if defined ltcg             set configure_flags=%configure_flags% --with-ltcg
-if defined release_urlbase  set configure_flags=%configure_flags% --release-urlbase=%release_urlbase%
-if defined download_arg     set configure_flags=%configure_flags% %download_arg%
-if defined dll              set configure_flags=%configure_flags% --shared
-if defined enable_static    set configure_flags=%configure_flags% --enable-static
-if defined no_NODE_OPTIONS  set configure_flags=%configure_flags% --without-node-options
-if defined link_module      set configure_flags=%configure_flags% %link_module%
-if defined i18n_arg         set configure_flags=%configure_flags% --with-intl=%i18n_arg%
-if defined config_flags     set configure_flags=%configure_flags% %config_flags%
-if defined target_arch      set configure_flags=%configure_flags% --dest-cpu=%target_arch%
-if defined openssl_no_asm   set configure_flags=%configure_flags% --openssl-no-asm
-if defined DEBUG_HELPER     set configure_flags=%configure_flags% --verbose
+if "%config%"=="Debug"       set configure_flags=%configure_flags% --debug
+if defined nosnapshot        set configure_flags=%configure_flags% --without-snapshot
+if defined noetw             set configure_flags=%configure_flags% --without-etw& set noetw_msi_arg=/p:NoETW=1
+if defined ltcg              set configure_flags=%configure_flags% --with-ltcg
+if defined release_urlbase   set configure_flags=%configure_flags% --release-urlbase=%release_urlbase%
+if defined download_arg      set configure_flags=%configure_flags% %download_arg%
+if defined dll               set configure_flags=%configure_flags% --shared
+if defined shared_zlib       set configure_flags=%configure_flags% --shared-zlib --shared-zlib-includes="C:\epic\UE_4.26\Engine\Source\ThirdParty\zlib\v1.2.8\include\Win64\VS2015" --shared-zlib-libname=zlibstatic --shared-zlib-libpath="C:\epic\UE_4.26\Engine\Source\ThirdParty\zlib\v1.2.8\lib\Win64\VS2015\Release"
+if defined shared_openssl    set configure_flags=%configure_flags% --shared-openssl --shared-openssl-includes="C:\epic\UE_4.26\Engine\Source\ThirdParty\OpenSSL\1.1.1\Include\Win64\VS2015" --shared-openssl-libname=libcrypto,libssl,crypt32,winmm --shared-openssl-libpath="C:\epic\UE_4.26\Engine\Source\ThirdParty\OpenSSL\1.1.1\lib\Win64\VS2015\Release"
+if defined enable_static     set configure_flags=%configure_flags% --enable-static
+if defined no_NODE_OPTIONS   set configure_flags=%configure_flags% --without-node-options
+if defined link_module       set configure_flags=%configure_flags% %link_module%
+if defined i18n_arg          set configure_flags=%configure_flags% --with-intl=%i18n_arg%
+if defined config_flags      set configure_flags=%configure_flags% %config_flags%
+if defined target_arch       set configure_flags=%configure_flags% --dest-cpu=%target_arch%
+if defined openssl_no_asm    set configure_flags=%configure_flags% --openssl-no-asm
+if defined DEBUG_HELPER      set configure_flags=%configure_flags% --verbose
+if defined incanta           set configure_flags=%configure_flags% --incanta
+if defined disable_inspector set configure_flags=%configure_flags% --without-inspector
 if "%target_arch%"=="x86" if "%PROCESSOR_ARCHITECTURE%"=="AMD64" set configure_flags=%configure_flags% --no-cross-compiling
 if "%target_arch%"=="arm64" set configure_flags=%configure_flags% --cross-compiling
 

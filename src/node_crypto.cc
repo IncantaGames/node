@@ -6099,8 +6099,13 @@ class RSAPSSKeyPairGenerationConfig : public RSAKeyPairGenerationConfig {
       return false;
 
     if (md_ != nullptr) {
+#ifdef INCANTA_NODE_UE4
+      if (EVP_PKEY_CTX_ctrl(ctx.get(), EVP_PKEY_RSA_PSS, EVP_PKEY_OP_KEYGEN, EVP_PKEY_CTRL_MD, 0, (void *)(md_)) <= 0)
+        return false;
+#else
       if (EVP_PKEY_CTX_set_rsa_pss_keygen_md(ctx.get(), md_) <= 0)
         return false;
+#endif
     }
 
     if (mgf1_md_ != nullptr) {
@@ -6852,11 +6857,13 @@ void InitCryptoOnce() {
 #ifndef OPENSSL_IS_BORINGSSL
   OPENSSL_INIT_SETTINGS* settings = OPENSSL_INIT_new();
 
+#ifndef INCANTA_NODE_UE4
   // --openssl-config=...
   if (!per_process::cli_options->openssl_config.empty()) {
     const char* conf = per_process::cli_options->openssl_config.c_str();
     OPENSSL_INIT_set_config_filename(settings, conf);
   }
+#endif
 
   OPENSSL_init_ssl(0, settings);
   OPENSSL_INIT_free(settings);

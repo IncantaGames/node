@@ -229,6 +229,8 @@ NODE_EXTERN int Start(int argc, char* argv[]);
 // in the loop and / or actively executing JavaScript code).
 NODE_EXTERN int Stop(Environment* env);
 
+NODE_EXTERN bool NodeIsInitialized();
+
 // It is recommended to use InitializeNodeWithArgs() instead as an embedder.
 // Init() calls InitializeNodeWithArgs() and exits the process with the exit
 // code returned from it.
