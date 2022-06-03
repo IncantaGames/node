@@ -790,6 +790,9 @@ void PerIsolateMessageListener(Local<Message> message, Local<Value> error) {
       break;
     }
     case Isolate::MessageErrorLevel::kMessageError:
+      char * buf = new char[1024];
+      message->Get()->WriteUtf8(isolate, buf);
+      delete buf;
       TriggerUncaughtException(isolate, error, message);
       break;
   }
